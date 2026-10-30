@@ -1,0 +1,10 @@
+{
+  "name": "Ace 课表｜网球教练排课助手",
+  "short_name": "Ace 课表",
+  "description": "网球教练专属排课与手机日历提醒工具",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f5f5ef",
+  "theme_color": "#173b2b",
+  "icons": [{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+}

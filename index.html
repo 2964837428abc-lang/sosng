@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#183b2b">
+  <meta name="description" content="专为网球教练设计的排课、冲突检查与手机日历提醒工具。">
+  <title>Ace 课表｜网球教练排课助手</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="主导航">
+      <a class="brand" href="#" data-view-link="dashboard" aria-label="Ace 课表首页">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-copy"><strong>Ace 课表</strong><small>COACH PLANNER</small></span>
+      </a>
+      <nav class="side-nav">
+        <button class="nav-item active" data-view-link="dashboard"><span class="nav-icon">⌂</span><span>总览</span></button>
+        <button class="nav-item" data-view-link="schedule"><span class="nav-icon">▦</span><span>课表</span></button>
+        <button class="nav-item" data-view-link="students"><span class="nav-icon">◉</span><span>学员</span></button>
+        <button class="nav-item" data-view-link="settings"><span class="nav-icon">⚙</span><span>提醒设置</span></button>
+      </nav>
+      <div class="sidebar-tip">
+        <span class="tip-ball" aria-hidden="true"></span>
+        <p>不再错过<br>任何一节课</p>
+        <small>课前自动提醒</small>
+      </div>
+      <button class="profile-button" id="profileButton" type="button">
+        <span class="avatar">教</span>
+        <span><strong id="coachNameSide">我的课表</strong><small>网球教练</small></span>
+      </button>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow" id="todayLabel">今天</p>
+          <h1 id="pageTitle">早上好，教练</h1>
+        </div>
+        <div class="topbar-actions">
+          <button class="icon-button" id="notificationButton" type="button" aria-label="开启浏览器提醒" title="开启浏览器提醒">♢<span class="notify-dot"></span></button>
+          <button class="primary-button" id="openAddCourse" type="button"><span>＋</span> 新增课程</button>
+        </div>
+      </header>
+
+      <section class="view active" id="dashboardView" data-view="dashboard">
+        <div class="next-class-card" id="nextClassCard">
+          <div class="next-copy">
+            <span class="live-pill"><i></i> NEXT CLASS</span>
+            <p>下一节课程</p>
+            <h2 id="nextStudent">今天没有课程</h2>
+            <div class="next-meta" id="nextMeta">可以休息一下，或提前安排下一节课。</div>
+          </div>
+          <div class="countdown-wrap">
+            <span>距离上课</span>
+            <strong id="countdown">—</strong>
+            <button class="calendar-link" id="nextCalendarButton" type="button" disabled>添加到手机日历 ↗</button>
+          </div>
+          <div class="court-lines" aria-hidden="true"><span></span><span></span><span></span></div>
+          <div class="tennis-ball" aria-hidden="true"></div>
+        </div>
+
+        <div class="stats-grid">
+          <article class="stat-card"><span class="stat-icon green">▣</span><div><small>今日课程</small><strong id="todayCount">0 <em>节</em></strong><p id="todayHours">共 0 小时</p></div></article>
+          <article class="stat-card"><span class="stat-icon blue">▤</span><div><small>本周课程</small><strong id="weekCount">0 <em>节</em></strong><p id="weekTrend">待安排</p></div></article>
+          <article class="stat-card"><span class="stat-icon orange">◷</span><div><small>待收课时</small><strong id="unpaidCount">0 <em>节</em></strong><p>记得课后确认</p></div></article>
+        </div>
+
+        <div class="dashboard-grid">
+          <section class="panel timeline-panel">
+            <div class="panel-header">
+              <div><h3>今日课表</h3><p id="todayScheduleDate"></p></div>
+              <button class="text-button" data-view-link="schedule">查看完整课表 →</button>
+            </div>
+            <div class="timeline" id="todayTimeline"></div>
+          </section>
+          <section class="panel week-panel">
+            <div class="panel-header"><div><h3>本周概览</h3><p>一眼掌握课程节奏</p></div><span class="week-total" id="weekTotalHours">0h</span></div>
+            <div class="week-bars" id="weekBars"></div>
+            <div class="week-legend"><span><i class="legend-today"></i>今天</span><span><i></i>其他日期</span></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="view" id="scheduleView" data-view="schedule">
+        <div class="view-heading">
+          <div><p class="section-kicker">SCHEDULE</p><h2>课程安排</h2><p>按日期查看、调整并同步你的课程。</p></div>
+          <div class="heading-actions"><button class="secondary-button" id="exportAllButton">⇩ 导出全部到日历</button><button class="primary-button add-course-secondary">＋ 新增课程</button></div>
+        </div>
+        <div class="schedule-toolbar">
+          <div class="segmented" role="tablist"><button class="active" data-schedule-filter="upcoming">即将开始</button><button data-schedule-filter="all">全部课程</button><button data-schedule-filter="past">已结束</button></div>
+          <label class="search-box"><span>⌕</span><input id="courseSearch" type="search" placeholder="搜索学员、场地…"></label>
+        </div>
+        <div class="course-list" id="courseList"></div>
+      </section>
+
+      <section class="view" id="studentsView" data-view="students">
+        <div class="view-heading">
+          <div><p class="section-kicker">STUDENTS</p><h2>我的学员</h2><p>从课程记录自动整理，无需重复录入。</p></div>
+          <button class="primary-button add-course-secondary">＋ 为学员排课</button>
+        </div>
+        <div class="student-grid" id="studentGrid"></div>
+      </section>
+
+      <section class="view" id="settingsView" data-view="settings">
+        <div class="view-heading"><div><p class="section-kicker">REMINDERS</p><h2>提醒与偏好</h2><p>设置默认提醒，让手机替你记住每一节课。</p></div></div>
+        <div class="settings-grid">
+          <section class="panel settings-panel">
+            <div class="setting-row"><div><span class="setting-icon">⏰</span><span><strong>默认提醒时间</strong><small>新课程会自动使用此设置</small></span></div><select id="defaultReminder"><option value="30">课前 30 分钟</option><option value="60">课前 1 小时</option><option value="120">课前 2 小时</option><option value="180">课前 3 小时</option><option value="1440">提前 1 天</option></select></div>
+            <div class="setting-row"><div><span class="setting-icon">◉</span><span><strong>浏览器提醒</strong><small>页面打开时提供额外提醒</small></span></div><button class="secondary-button" id="enableNotifications">开启</button></div>
+            <div class="setting-row"><div><span class="setting-icon">▣</span><span><strong>手机日历提醒</strong><small>导出的课程会带系统提醒</small></span></div><span class="status-badge success">已支持</span></div>
+          </section>
+          <section class="panel settings-panel">
+            <div class="panel-header"><div><h3>教练资料</h3><p>用于课程标题和日历备注</p></div></div>
+            <label class="field"><span>称呼</span><input id="coachName" type="text" placeholder="例如：王教练"></label>
+            <label class="field"><span>联系电话</span><input id="coachPhone" type="tel" placeholder="选填"></label>
+            <button class="primary-button" id="saveSettings">保存设置</button>
+          </section>
+          <section class="panel data-panel">
+            <div><h3>数据管理</h3><p>课程只保存在当前设备浏览器。建议定期导出日历备份。</p></div>
+            <button class="danger-button" id="clearDataButton">清空全部课程</button>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <nav class="mobile-nav" aria-label="手机导航">
+      <button class="active" data-view-link="dashboard"><span>⌂</span>总览</button>
+      <button data-view-link="schedule"><span>▦</span>课表</button>
+      <button class="mobile-add add-course-secondary" aria-label="新增课程">＋</button>
+      <button data-view-link="students"><span>◉</span>学员</button>
+      <button data-view-link="settings"><span>⚙</span>设置</button>
+    </nav>
+  </div>
+
+  <dialog class="course-dialog" id="courseDialog">
+    <form id="courseForm">
+      <div class="dialog-header">
+        <div><p class="section-kicker">NEW SESSION</p><h2 id="dialogTitle">新增课程</h2></div>
+        <button class="close-button" aria-label="关闭" type="button" id="closeDialog">×</button>
+      </div>
+      <input type="hidden" id="courseId">
+      <div class="form-grid">
+        <label class="field full"><span>学员姓名 *</span><input id="studentName" required autocomplete="off" placeholder="例如：小宇"></label>
+        <label class="field"><span>上课日期 *</span><input id="courseDate" type="date" required></label>
+        <label class="field"><span>课程类型</span><select id="courseType"><option>一对一私教</option><option>双人课</option><option>小班课</option><option>体能训练</option><option>试课</option></select></label>
+        <label class="field"><span>开始时间 *</span><input id="startTime" type="time" required></label>
+        <label class="field"><span>结束时间 *</span><input id="endTime" type="time" required></label>
+        <label class="field full"><span>上课场地 *</span><input id="location" required placeholder="例如：星河网球中心 · 3号场"></label>
+        <label class="field"><span>提醒时间</span><select id="reminderMinutes"><option value="30">课前 30 分钟</option><option value="60">课前 1 小时</option><option value="120">课前 2 小时</option><option value="180">课前 3 小时</option><option value="1440">提前 1 天</option></select></label>
+        <label class="field"><span>重复排课</span><select id="repeatWeeks"><option value="0">仅本次</option><option value="3">每周重复，共 4 次</option><option value="7">每周重复，共 8 次</option><option value="11">每周重复，共 12 次</option></select></label>
+        <label class="check-field"><input id="isPaid" type="checkbox"><span>本节课已收课时</span></label>
+        <label class="field full"><span>备注</span><textarea id="notes" rows="3" placeholder="训练重点、学员情况等（选填）"></textarea></label>
+      </div>
+      <div class="conflict-alert" id="conflictAlert" role="alert" hidden><strong>时间有冲突</strong><span id="conflictText"></span></div>
+      <div class="dialog-actions"><button class="secondary-button" type="button" id="cancelDialog">取消</button><button class="primary-button" type="submit">保存课程</button></div>
+    </form>
+  </dialog>
+
+  <div class="confirm-layer" id="confirmLayer" hidden>
+    <div class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="confirmTitle"><span class="confirm-icon">!</span><h3 id="confirmTitle">确认操作</h3><p id="confirmMessage"></p><div><button class="secondary-button" id="confirmCancel">取消</button><button class="danger-button" id="confirmOk">确认</button></div></div>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"><span>✓</span><p></p></div>
+  <script src="app.js"></script>
+</body>
+</html>
