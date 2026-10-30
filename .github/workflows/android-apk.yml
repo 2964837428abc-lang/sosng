@@ -1,0 +1,76 @@
+name: Build Ace Android APK
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'android/**'
+      - '.github/workflows/android-apk.yml'
+permissions:
+  contents: read
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: Prepare Android SDK
+        run: |
+          sdkmanager "platforms;android-35" "build-tools;35.0.0" "platform-tools"
+      - name: Build native application
+        run: gradle -p android :app:assembleRelease :app:assembleDebug --no-daemon --stacktrace
+      - name: Prepare test device
+        run: |
+          sdkmanager "system-images;android-35;google_apis;x86_64"
+          echo no | avdmanager create avd -n ace35 -k "system-images;android-35;google_apis;x86_64" --force
+          sudo chmod 666 /dev/kvm
+          "$ANDROID_HOME/emulator/emulator" -avd ace35 -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect -memory 2048 -cores 2 > /tmp/ace-emulator.log 2>&1 &
+          timeout 120 adb wait-for-device
+          for i in $(seq 1 90); do
+            if adb shell getprop sys.boot_completed | tr -d '\r' | grep -q 1; then break; fi
+            sleep 2
+          done
+          adb shell input keyevent 82
+          adb install android/app/build/outputs/apk/debug/app-debug.apk
+          adb shell pm grant com.acecoach.planner android.permission.POST_NOTIFICATIONS
+          adb shell appops set com.acecoach.planner SCHEDULE_EXACT_ALARM allow
+      - name: Test native UI and actual background alarm
+        run: |
+          mkdir -p evidence
+          adb shell am instrument -w com.acecoach.planner/.SmokeInstrumentation | tee evidence/native-smoke.txt
+          grep -q "PASS: native screens" evidence/native-smoke.txt
+          adb exec-out run-as com.acecoach.planner cat files/smoke.png > evidence/ace-home.png
+      - name: Verify reminders restored after reboot
+        run: |
+          adb reboot
+          timeout 120 adb wait-for-device
+          for i in $(seq 1 90); do
+            if adb shell getprop sys.boot_completed | tr -d '\r' | grep -q 1; then break; fi
+            sleep 2
+          done
+          adb shell input keyevent 82
+          sleep 6
+          adb shell dumpsys alarm > evidence/alarms-after-reboot.txt
+          grep -q "com.acecoach.planner" evidence/alarms-after-reboot.txt
+          printf '\nPASS: reminders restored after device reboot.\n' >> evidence/native-smoke.txt
+      - name: Collect APK and signing tool
+        if: always()
+        run: |
+          mkdir -p deliverables evidence
+          cp android/app/build/outputs/apk/release/app-release-unsigned.apk deliverables/Ace-Coach-1.0.0-unsigned.apk || true
+          cp "$ANDROID_HOME/build-tools/35.0.0/lib/apksigner.jar" deliverables/apksigner.jar || true
+          cp /tmp/ace-emulator.log evidence/emulator.log || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ace-android-build
+          path: |
+            deliverables/
+            evidence/
+          retention-days: 14

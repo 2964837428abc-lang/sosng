@@ -1,0 +1,3 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <instrumentation android:name=".SmokeInstrumentation" android:targetPackage="com.acecoach.planner" android:label="Ace native smoke tests"/>
+</manifest>
