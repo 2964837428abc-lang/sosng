@@ -65,8 +65,11 @@ jobs:
             sleep 2
           done
           adb shell input keyevent 82
-          sleep 6
-          adb shell dumpsys alarm > evidence/alarms-after-reboot.txt
+          for i in $(seq 1 30); do
+            adb shell dumpsys alarm > evidence/alarms-after-reboot.txt
+            if grep -q "com.acecoach.planner" evidence/alarms-after-reboot.txt; then break; fi
+            sleep 3
+          done
           grep -q "com.acecoach.planner" evidence/alarms-after-reboot.txt
           printf '\nPASS: reminders restored after device reboot.\n' >> evidence/native-smoke.txt
       - name: Collect APK and signing tool
@@ -79,6 +82,7 @@ jobs:
           adb logcat -d -s AndroidRuntime:V AceCoach:V > evidence/runtime.log || true
           adb shell appops get com.acecoach.planner > evidence/appops.txt || true
           adb shell dumpsys package com.acecoach.planner > evidence/package.txt || true
+          adb exec-out run-as com.acecoach.planner cat shared_prefs/ace_native_v1.xml > evidence/preferences.xml || true
       - uses: actions/upload-artifact@v4
         if: always()
         with:
